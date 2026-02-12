@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vescort</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    body { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: #e0e0ff; font-family: 'Segoe UI', sans-serif; margin: 0; height: 100vh; overflow: hidden; }
+    .glow { box-shadow: 0 0 15px rgba(88,101,242,0.5); transition: all 0.3s; }
+    .glow:hover { box-shadow: 0 0 25px rgba(88,101,242,0.8); transform: scale(1.05); }
+    .header-gradient { background: linear-gradient(to right, #5865f2, #7289da); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .online { color: #3ba55c; }
+    .avatar-img { width: 100%; height: 100%; object-fit: cover; border-radius: 9999px; }
+    .error { color: #ed4245; }
+  </style>
+</head>
+<body class="flex">
+
+  <!-- Auth Ekranı -->
+  <div id="auth-screen" class="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50">
+    <div class="w-96 bg-[#1e1e2f]/90 p-8 rounded-xl shadow-2xl border border-[#5865f2]/30">
+      <h1 class="text-3xl font-bold text-center mb-6 header-gradient">Vescort</h1>
+
+      <!-- Kayıt Ekranı (direkt açık) -->
+      <div id="register-container">
+        <h2 class="text-2xl font-bold mb-4 text-center">Hesap Oluştur</h2>
+        <form id="register-form">
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-1">E-posta *</label>
+            <input id="reg-email" type="email" required class="w-full bg-[#0f0f1a] p-3 rounded border border-gray-700 focus:border-[#5865f2] outline-none" placeholder="ornek@gmail.com" />
+            <p id="email-error" class="text-error text-xs mt-1 hidden">Bu e-posta zaten kayıtlı!</p>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-1">Kullanıcı Adı *</label>
+            <input id="reg-username" type="text" required class="w-full bg-[#0f0f1a] p-3 rounded border border-gray-700 focus:border-[#5865f2] outline-none" placeholder="kullanıcı" />
+            <p id="username-error" class="text-error text-xs mt-1 hidden">Bu kullanıcı adı alınmış!</p>
+          </div>
+          <div class="mb-6">
+            <label class="block text-sm font-medium mb-1">Şifre *</label>
+            <input id="reg-pass" type="password" required class="w-full bg-[#0f0f1a] p-3 rounded border border-gray-700 focus:border-[#5865f2] outline-none" />
+          </div>
+          <button type="submit" class="w-full bg-[#5865f2] py-3 rounded font-bold hover:bg-[#4752c4]">Hesap Oluştur</button>
+        </form>
+        <p class="text-center mt-4 text-gray-400">
+          Hesabın var mı? <span id="to-login" class="text-[#5865f2] cursor-pointer hover:underline">Giriş Yap</span>
+        </p>
+      </div>
+
+      <!-- Giriş Ekranı (gizli başlar) -->
+      <div id="login-container" class="hidden">
+        <h2 class="text-2xl font-bold mb-4 text-center">Giriş Yap</h2>
+        <form id="login-form">
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-1">Kullanıcı Adı</label>
+            <input id="login-username" type="text" required class="w-full bg-[#0f0f1a] p-3 rounded border border-gray-700 focus:border-[#5865f2] outline-none" placeholder="kullanıcı" />
+          </div>
+          <div class="mb-6">
+            <label class="block text-sm font-medium mb-1">Şifre</label>
+            <input id="login-pass" type="password" required class="w-full bg-[#0f0f1a] p-3 rounded border border-gray-700 focus:border-[#5865f2] outline-none" />
+          </div>
+          <p id="login-error" class="text-error text-sm mb-4 hidden">Kullanıcı adı veya şifre yanlış.</p>
+          <button type="submit" class="w-full bg-[#5865f2] py-3 rounded font-bold hover:bg-[#4752c4]">Giriş Yap</button>
+        </form>
+        <p class="text-center mt-4 text-gray-400">
+          Hesabın yok mu? <span id="to-register" class="text-[#5865f2] cursor-pointer hover:underline">Hesap Oluştur</span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ana Ekran -->
+  <div id="main-screen" class="hidden flex w-full h-full">
+    <div class="w-72 bg-[#16172a]/90 flex flex-col border-r border-[#5865f2]/20">
+      <div class="p-4 font-bold text-lg header-gradient border-b border-[#5865f2]/20">Vescort</div>
+
+      <div class="p-3 bg-[#0f0f1a]/50 border-b border-[#5865f2]/20">
+        <input id="add-friend-input" type="text" placeholder="kullanıcı#0001" class="w-full bg-[#0f0f1a] p-2 rounded border border-gray-700 focus:border-[#5865f2] outline-none" />
+        <button id="add-friend-btn" class="mt-2 w-full bg-[#5865f2] py-2 rounded font-bold hover:bg-[#4752c4]">İstek Gönder</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-2" id="friends-list"></div>
+
+      <div class="p-3 bg-[#0f0f1a]/80 border-t border-[#5865f2]/20 flex items-center justify-between">
+        <div class="flex items-center">
+          <div id="user-avatar" class="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full mr-3 glow overflow-hidden">
+            <img id="user-avatar-img" src="" alt="Profil" class="avatar-img hidden" />
+          </div>
+          <div>
+            <div id="display-name" class="font-medium">Kullanıcı</div>
+            <div id="username" class="text-xs text-gray-500">#0001</div>
+          </div>
+        </div>
+        <button id="settings-btn" class="text-gray-400 hover:text-white">
+          <i class="fas fa-cog text-xl"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="flex-1 flex flex-col">
+      <div class="p-4 bg-[#1e1e2f]/50 border-b border-[#5865f2]/20">
+        <h2 id="chat-title" class="font-bold text-xl header-gradient">Hoş geldin!</h2>
+      </div>
+      <div class="flex-1 overflow-y-auto p-6" id="chat-messages">
+        <p class="text-gray-400">Hesabın hazır.</p>
+      </div>
+      <div class="p-4 bg-[#1e1e2f]/70 border-t border-[#5865f2]/20 hidden" id="message-input-area">
+        <input type="text" placeholder="Mesaj yaz..." class="w-full bg-[#0f0f1a] p-4 rounded border border-gray-700 focus:border-[#5865f2] outline-none" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Profil Düzenle Modal -->
+  <div id="settings-modal" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center z-50">
+    <div class="bg-[#1e1e2f] p-8 rounded-xl w-96 border border-[#5865f2]/30 shadow-2xl">
+      <h2 class="text-2xl font-bold mb-6 header-gradient">Profil Düzenle</h2>
+      
+      <div class="mb-6 text-center">
+        <label class="block text-sm font-medium mb-2">Profil Fotoğrafı</label>
+        <div class="w-32 h-32 mx-auto bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full overflow-hidden glow">
+          <img id="preview-img" src="" alt="Önizleme" class="w-full h-full object-cover hidden" />
+        </div>
+        <input type="file" id="avatar-upload" accept="image/*" class="hidden" />
+        <button onclick="document.getElementById('avatar-upload').click()" class="mt-3 px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 text-sm">Fotoğraf Seç</button>
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-sm font-medium mb-2">Gösterilen İsim</label>
+        <input id="edit-display" type="text" value="Kullanıcı" class="w-full bg-[#0f0f1a] p-3 rounded border border-gray-700 focus:border-[#5865f2] outline-none" />
+      </div>
+      <div class="mb-6">
+        <label class="block text-sm font-medium mb-2">Kullanıcı Adı</label>
+        <input id="edit-username" type="text" value="kullanıcı" class="w-full bg-[#0f0f1a] p-3 rounded border border-gray-700 focus:border-[#5865f2] outline-none" />
+      </div>
+      <div class="flex justify-end space-x-4">
+        <button id="cancel-settings" class="px-6 py-2 bg-gray-700 rounded hover:bg-gray-600">İptal</button>
+        <button id="save-settings" class="px-6 py-2 bg-[#5865f2] rounded hover:bg-[#4752c4]">Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const auth = document.getElementById('auth-screen');
+    const main = document.getElementById('main-screen');
+
+    // localStorage hesaplar + profil fotoğrafı
+    let accounts = JSON.parse(localStorage.getItem('vescort_accounts')) || {
+      "kullanıcı": { password: "sifre123", email: "kullanıcı@gmail.com", displayName: "Kullanıcı", discriminator: "0001" },
+      "dogu": { password: "dogu123", email: "dogu@gmail.com", displayName: "Dogu", discriminator: "0001" }
+    };
+
+    let currentUser = localStorage.getItem('vescort_current_user');
+
+    function saveAccounts() {
+      localStorage.setItem('vescort_accounts', JSON.stringify(accounts));
+    }
+
+    function goToMain(username) {
+      const user = accounts[username];
+      document.getElementById('display-name').textContent = user.displayName;
+      document.getElementById('username').textContent = `#${user.discriminator}`;
+      
+      const savedAvatar = localStorage.getItem(`vescort_avatar_${username}`);
+      if (savedAvatar) {
+        document.getElementById('user-avatar-img').src = savedAvatar;
+        document.getElementById('user-avatar-img').classList.remove('hidden');
+      }
+
+      auth.classList.add('hidden');
+      main.classList.remove('hidden');
+    }
+
+    // Sayfa yüklendiğinde otomatik giriş
+    if (currentUser && accounts[currentUser]) {
+      goToMain(currentUser);
+    }
+
+    // Kayıt
+    document.getElementById('register-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const email = document.getElementById('reg-email').value.trim();
+      const username = document.getElementById('reg-username').value.trim().toLowerCase();
+      const pass = document.getElementById('reg-pass').value;
+
+      if (Object.values(accounts).some(acc => acc.email === email)) {
+        document.getElementById('email-error').classList.remove('hidden');
+        return;
+      }
+      if (accounts[username]) {
+        document.getElementById('username-error').classList.remove('hidden');
+        return;
+      }
+
+      accounts[username] = {
+        password: pass,
+        email: email,
+        displayName: username.charAt(0).toUpperCase() + username.slice(1),
+        discriminator: "0001"
+      };
+      saveAccounts();
+      localStorage.setItem('vescort_current_user', username);
+
+      alert('Hesap oluşturuldu! Otomatik giriş yapılıyor.');
+      goToMain(username);
+    });
+
+    // Giriş
+    document.getElementById('login-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const username = document.getElementById('login-username').value.trim().toLowerCase();
+      const pass = document.getElementById('login-pass').value;
+
+      if (accounts[username] && accounts[username].password === pass) {
+        localStorage.setItem('vescort_current_user', username);
+        goToMain(username);
+      } else {
+        document.getElementById('login-error').classList.remove('hidden');
+      }
+    });
+
+    // Switch ekranlar
+    document.getElementById('to-login').onclick = () => {
+      document.getElementById('register-container').classList.add('hidden');
+      document.getElementById('login-container').classList.remove('hidden');
+    };
+    document.getElementById('to-register').onclick = () => {
+      document.getElementById('login-container').classList.add('hidden');
+      document.getElementById('register-container').classList.remove('hidden');
+    };
+
+    // Arkadaş ekle/sil/DM
+    document.getElementById('add-friend-btn').onclick = () => {
+      const input = document.getElementById('add-friend-input').value.trim();
+      if (!input) return;
+      const list = document.getElementById('friends-list');
+      const div = document.createElement('div');
+      div.className = 'px-3 py-2 rounded hover:bg-[#5865f2]/10 flex items-center justify-between';
+      div.innerHTML = `
+        <div class="flex items-center cursor-pointer" onclick="openDM('${input.split('#')[0]}')">
+          <div class="w-8 h-8 bg-green-500 rounded-full mr-3 glow overflow-hidden"><img class="avatar-img hidden" src="" alt=""></div>
+          <div>
+            <div class="font-medium online">${input.split('#')[0]}</div>
+            <div class="text-xs online">#${input.split('#')[1] || '0001'} - Çevrimiçi</div>
+          </div>
+        </div>
+        <button class="text-red-400 text-sm hover:text-red-300" onclick="this.parentElement.remove()">Sil</button>
+      `;
+      list.appendChild(div);
+      document.getElementById('add-friend-input').value = '';
+    };
+
+    function openDM(name) {
+      document.getElementById('chat-title').textContent = name;
+      document.getElementById('chat-messages').innerHTML = `<p class="text-gray-300">${name} ile sohbet başlasın!</p>`;
+      document.getElementById('message-input-area').classList.remove('hidden');
+    }
+
+    // Ayarlar modalı
+    const modal = document.getElementById('settings-modal');
+    document.getElementById('settings-btn').onclick = () => modal.classList.remove('hidden');
+    document.getElementById('cancel-settings').onclick = () => modal.classList.add('hidden');
+    modal.onclick = e => { if (e.target === modal) modal.classList.add('hidden'); };
+
+    // Fotoğraf seçme + kalıcı kaydetme
+    document.getElementById('avatar-upload').onchange = e => {
+      const file = e.target.files[0];
+      if (file) {
+        const url = URL.createObjectURL(file);
+        document.getElementById('preview-img').src = url;
+        document.getElementById('preview-img').classList.remove('hidden');
+        document.getElementById('user-avatar-img').src = url;
+        document.getElementById('user-avatar-img').classList.remove('hidden');
+
+        const current = localStorage.getItem('vescort_current_user');
+        if (current) {
+          localStorage.setItem(`vescort_avatar_${current}`, url);
+        }
+      }
+    };
+
+    // Profil kaydet
+    document.getElementById('save-settings').onclick = () => {
+      const newDisplay = document.getElementById('edit-display').value.trim() || "Kullanıcı";
+      const newUser = document.getElementById('edit-username').value.trim() || "kullanıcı";
+      document.getElementById('display-name').textContent = newDisplay;
+      document.getElementById('username').textContent = `#${newUser}001`;
+      modal.classList.add('hidden');
+    };
+  </script>
+</body>
+</html>
